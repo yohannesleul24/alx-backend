@@ -40,23 +40,35 @@ class Server:
         return self.__indexed_dataset
 
     def get_hyper_index(self, index: int = None, page_size: int = 10) -> Dict:
-        """Dataset indexed by sorting position, starting at 0
+        """
+        Takes 2 integer arguments and returns a dictionary with
+        the following key-value pairs:
+            index: index of the first item in the current page
+            next_index: index of the first item in the next page
+            page_size: the current page size
+            data: actual page of the dataset
+        Args:
+            index(int): first required index
+            page_size(int): required number of records per page
         """
         dataset = self.indexed_dataset()
-        assert type(index) is int and index in range(len(dataset))
-        rows = []
-        i = index
-        j = index + page_size
-        while i < j:
-            if i in dataset.keys():
-                rows.append(dataset[i])
-            else:
-                j += 1
-            i += 1
-        return {
-            "index": index,
-            "data": rows,
-            "page_size": len(rows),
-            "next_index": j
-        }
-            
+        data_length = len(dataset)
+        assert 0 <= index < data_length
+        response = {}
+        data = []
+        response['index'] = index
+        for i in range(page_size):
+            while True:
+                curr = dataset.get(index)
+                index += 1
+                if curr is not None:
+                    break
+            data.append(curr)
+
+        response['data'] = data
+        response['page_size'] = len(data)
+        if dataset.get(index):
+            response['next_index'] = index
+        else:
+            response['next_index'] = None
+        return response
